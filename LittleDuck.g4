@@ -12,12 +12,12 @@ comprobarvars
             ;
 
 vars: DECLARACION tipovar;
-tipovar: tipo DOSPUNTOS ID {$parser.DeclararVariable($ID.text, $tipo.text, None)} variosids;
+tipovar: tipo DOSPUNTOS ID {$parser.DeclararVariable($ID.text, None)} variosids;
 variosids
         :
         PUNTOCOMA masvars
         |
-        COMA ID variosids
+        COMA ID {$parser.DeclararVariable($ID.text, None)} variosids
         ;
 masvars
         : 
@@ -27,9 +27,9 @@ masvars
 
 tipo
     :
-    ENTERO
+    ENTERO {$parser.tipoVar = $ENTERO.text}
     |
-    FLOTANTE
+    FLOTANTE {$parser.tipoVar = $FLOTANTE.text}
     ;
 
 cuerpo: INICIOCORCHETE comprobarestatuto FINCORCHETE;
@@ -50,7 +50,7 @@ estatuto
         escritura
         ;
 
-asigna: ID ASIGNA expresion PUNTOCOMA;
+asigna: ID ASIGNA expresion {$parser.AsignarValor($ID.text, $expresion.text)} PUNTOCOMA;
 
 condicion: SI INICIOPARENTESIS expresion FINPARENTESIS cuerpo sino PUNTOCOMA;
 sino
@@ -121,7 +121,7 @@ checasimbolo
 
 varcte
     :
-    ID {print($parser.symbolTable)}
+    ID
     |
     CTE_ENTERO
     |
