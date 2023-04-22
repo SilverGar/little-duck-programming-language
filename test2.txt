@@ -1,0 +1,10 @@
+prog test;
+var int: a,d;
+float: b,c;
+[
+a = 15+6;
+b = 5;
+c = 10/5;
+
+print("C: ", c, "A: ", a);
+]
