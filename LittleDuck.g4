@@ -4,7 +4,7 @@ grammar LittleDuck;
 options {superClass = LittleDuckBaseParser; }
 
 // Definicion de gramatica
-prog: PROG ID PUNTOCOMA comprobarvars cuerpo;
+prog: PROG ID PUNTOCOMA comprobarvars cuerpo {$parser.ImprimirTabla()};
 comprobarvars
             :
             vars
@@ -50,7 +50,7 @@ estatuto
         escritura
         ;
 
-asigna: ID ASIGNA expresion {$parser.AsignarValor($ID.text, $expresion.text)} PUNTOCOMA;
+asigna: ID ASIGNA expresion {$parser.AsignarValor($ID.text, $parser.resultado)} PUNTOCOMA {$parser.operands.clear()} {$parser.resultado = 0};
 
 condicion: SI INICIOPARENTESIS expresion FINPARENTESIS cuerpo sino PUNTOCOMA;
 sino
@@ -62,12 +62,12 @@ sino
 
 ciclo: MIENTRAS INICIOPARENTESIS expresion FINPARENTESIS cuerpo PUNTOCOMA;
 
-escritura: IMPRIMIR INICIOPARENTESIS string FINPARENTESIS PUNTOCOMA;
+escritura: IMPRIMIR INICIOPARENTESIS string {$parser.Imprimir()} FINPARENTESIS PUNTOCOMA;
 string
         :
-        CTE_STRING masstrings
+        CTE_STRING {$parser.strings.append($CTE_STRING.text)} masstrings
         |
-        expresion masstrings
+        expresion {$parser.strings.append($parser.symbolTable[$expresion.text]['valor'])} masstrings
         ;
 masstrings
         :
@@ -88,8 +88,14 @@ exp: termino comprobaroperacion;
 comprobaroperacion
                 :
                 SUMA exp
+                {$parser.r_oper = $parser.operands.pop()}
+                {$parser.l_oper = $parser.operands.pop()}
+                {$parser.Suma($parser.l_oper, $parser.r_oper)}
                 |
                 RESTA exp
+                {$parser.r_oper = $parser.operands.pop()}
+                {$parser.l_oper = $parser.operands.pop()}
+                {$parser.Resta($parser.l_oper, $parser.r_oper)}
                 | /* epsilon */
                 ;
 
@@ -97,8 +103,14 @@ termino: factor comprobarmultiplicacion;
 comprobarmultiplicacion
                         :
                         MULTIPLICA termino
+                        {$parser.r_oper = $parser.operands.pop()}
+                        {$parser.l_oper = $parser.operands.pop()}
+                        {$parser.Multiplica($parser.l_oper, $parser.r_oper)}
                         |
                         DIVIDE termino
+                        {$parser.r_oper = $parser.operands.pop()}
+                        {$parser.l_oper = $parser.operands.pop()}
+                        {$parser.Dividir($parser.l_oper, $parser.r_oper)}
                         | /* epsilon */
                         ;
             
@@ -123,9 +135,9 @@ varcte
     :
     ID
     |
-    CTE_ENTERO
+    CTE_ENTERO {$parser.operands.append(int($CTE_ENTERO.text))} {$parser.resultado = int($CTE_ENTERO.text)}
     |
-    CTE_FLOTANTE
+    CTE_FLOTANTE {$parser.operands.append(float($CTE_FLOTANTE.text))} {$parser.resultado = float($CTE_FLOTANTE.text)}
     ;
 
 
