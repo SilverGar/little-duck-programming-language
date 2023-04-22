@@ -1,5 +1,8 @@
 grammar LittleDuck;
 
+// Agregar archivo donde se agregará el código de Python
+options {superClass = LittleDuckBaseParser; }
+
 // Definicion de gramatica
 prog: PROG ID PUNTOCOMA comprobarvars cuerpo;
 comprobarvars
@@ -9,7 +12,7 @@ comprobarvars
             ;
 
 vars: DECLARACION tipovar;
-tipovar: tipo DOSPUNTOS ID variosids;
+tipovar: tipo DOSPUNTOS ID {$parser.DeclararVariable($ID.text, $tipo.text, None)} variosids;
 variosids
         :
         PUNTOCOMA masvars
@@ -57,7 +60,7 @@ sino
     | /* epsilon */
     ;
 
-ciclo: MIENTRAS INICIOPARENTESIS expresion {System.out.println("Imprimir");} FINPARENTESIS cuerpo PUNTOCOMA;
+ciclo: MIENTRAS INICIOPARENTESIS expresion FINPARENTESIS cuerpo PUNTOCOMA;
 
 escritura: IMPRIMIR INICIOPARENTESIS string FINPARENTESIS PUNTOCOMA;
 string
@@ -118,7 +121,7 @@ checasimbolo
 
 varcte
     :
-    ID
+    ID {print($parser.symbolTable)}
     |
     CTE_ENTERO
     |
