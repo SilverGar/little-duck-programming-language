@@ -1,0 +1,22 @@
+prog test;
+var int: a;
+float: b,c;
+[
+a = 10;
+b = 5;
+c = 10/5;
+
+si (a < b)
+[
+	print("a: ", a, "es menor que b: ", b);	
+]sino
+[
+	print("a: ", a, " es mayor que b: ", b);
+];
+
+mientras(c < a)
+[
+	print("a: ", a);
+	a = a + 1;
+];
+]
