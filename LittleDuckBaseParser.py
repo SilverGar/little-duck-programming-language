@@ -87,9 +87,6 @@ class LittleDuckBaseParser(Parser):
         if operator == '/' and resultType != 'Error':
             self.resultado = l_oper / r_oper
 
-    #def CambiarTipo(self, id):
-    #    resultType =
-
     # Funcion para probar que se llena la tabla de variables
     def ImprimirTabla(self):
         print('\n', "Tabla de variables:")
