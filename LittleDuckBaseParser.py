@@ -4,11 +4,11 @@ class LittleDuckBaseParser(Parser):
     symbolTable = {}
     tipoVar = ""
     typeMatchingTable = [
-        #l_op   r_op     +
-        [['int', 'int', 'int'], ['int', 'int', 'int'], ['int', 'int', 'int'], ['int', 'int', 'float']],
-        [['int', 'float', 'float'], ['int', 'float', 'float'], ['int', 'float', 'float'], ['int', 'float', 'float']],
-        [['float', 'int', 'float'], ['float', 'int', 'float'], ['float', 'int', 'float'], ['float', 'int', 'float']],
-        [['float', 'float', 'float'], ['float', 'float', 'float'], ['float', 'float', 'float'], ['float', 'float', 'float']]
+        #l_op   r_op     +                     -                               *                       /
+        [['int', 'int', 'int'],         ['int', 'int', 'int'],      ['int', 'int', 'int'],      ['int', 'int', 'float']],
+        [['int', 'float', 'float'],     ['int', 'float', 'float'],  ['int', 'float', 'float'],  ['int', 'float', 'float']],
+        [['float', 'int', 'float'],     ['float', 'int', 'float'],  ['float', 'int', 'float'],  ['float', 'int', 'float']],
+        [['float', 'float', 'float'],   ['float', 'float', 'float'],['float', 'float', 'float'],['float', 'float', 'float']]
     ]
     # Variables para operaciones
     l_oper = ''
@@ -16,6 +16,9 @@ class LittleDuckBaseParser(Parser):
     operators = []
     operands = []
     resultado = 0
+
+    # Variables para validar operaciones
+    ids = []
 
     # Variables para imprimir
     strings = []
@@ -40,17 +43,52 @@ class LittleDuckBaseParser(Parser):
             print(string, end = " ")
             #self.strings.pop(0)
 
-    def Dividir(self, l_oper, r_oper):
-        self.resultado = l_oper / r_oper
+    def ObtenerTipo(self, operand):
+        tipoCompleto = str(type(operand)).replace('<class \'', '')
+        tipo = tipoCompleto.replace('\'>', '')
+        return tipo
+    def ChecaTipoResultante(self, l, r, o):
+        l_tipo = self.ObtenerTipo(l)
+        r_tipo = self.ObtenerTipo(r)
 
-    def Multiplica(self, l_oper, r_oper):
-        self.resultado = l_oper * r_oper
+        if(o == '+'):
+            for li in self.typeMatchingTable:
+                if li[0][0] == l_tipo and li[0][1] == r_tipo:
+                    return li[0][2]
 
-    def Suma(self, l_oper, r_oper):
-        self.resultado = l_oper + r_oper
+        if (o == '-'):
+            for li in self.typeMatchingTable:
+                if li[1][0] == l_tipo and li[1][1] == r_tipo:
+                    return li[1][2]
 
-    def Resta(self, l_oper, r_oper):
-        self.resultado = l_oper - r_oper
+        if (o == '*'):
+            for li in self.typeMatchingTable:
+                if li[2][0] == l_tipo and li[2][1] == r_tipo:
+                    return li[2][2]
+
+        if (o == '/'):
+            for li in self.typeMatchingTable:
+                if li[3][0] == l_tipo and li[3][1] == r_tipo:
+                    return li[3][2]
+    def RealizarOperacion(self, l_oper, r_oper, operator):
+        resultType = self.ChecaTipoResultante(l_oper, r_oper, operator)
+        if self.ids:
+            self.symbolTable[self.ids.pop()]['tipo'] = resultType
+
+        if operator == '+' and resultType != 'Error':
+            self.resultado = l_oper + r_oper
+
+        if operator == '-' and resultType != 'Error':
+            self.resultado = l_oper - r_oper
+
+        if operator == '*' and resultType != 'Error':
+            self.resultado = l_oper * r_oper
+
+        if operator == '/' and resultType != 'Error':
+            self.resultado = l_oper / r_oper
+
+    #def CambiarTipo(self, id):
+    #    resultType =
 
     # Funcion para probar que se llena la tabla de variables
     def ImprimirTabla(self):
