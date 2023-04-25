@@ -4,11 +4,11 @@ class LittleDuckBaseParser(Parser):
     symbolTable = {}
     tipoVar = ""
     typeMatchingTable = [
-        #l_op   r_op     +                     -                               *                       /
-        [['int', 'int', 'int'],         ['int', 'int', 'int'],      ['int', 'int', 'int'],      ['int', 'int', 'float']],
-        [['int', 'float', 'float'],     ['int', 'float', 'float'],  ['int', 'float', 'float'],  ['int', 'float', 'float']],
-        [['float', 'int', 'float'],     ['float', 'int', 'float'],  ['float', 'int', 'float'],  ['float', 'int', 'float']],
-        [['float', 'float', 'float'],   ['float', 'float', 'float'],['float', 'float', 'float'],['float', 'float', 'float']]
+        #l_op   r_op     +                     -                               *                       /                            <>
+        [['int', 'int', 'int'],         ['int', 'int', 'int'],      ['int', 'int', 'int'],      ['int', 'int', 'float'], ['int', 'int', 'int']],
+        [['int', 'float', 'float'],     ['int', 'float', 'float'],  ['int', 'float', 'float'],  ['int', 'float', 'float'], ['int', 'float', 'int']],
+        [['float', 'int', 'float'],     ['float', 'int', 'float'],  ['float', 'int', 'float'],  ['float', 'int', 'float'], ['float', 'int', 'int']],
+        [['float', 'float', 'float'],   ['float', 'float', 'float'],['float', 'float', 'float'],['float', 'float', 'float'], ['float', 'float', 'int']]
     ]
     # Variables para operaciones
     l_oper = ''
@@ -27,6 +27,10 @@ class LittleDuckBaseParser(Parser):
     Quads = {}
     cont = 1;
 
+    # Variables para expresiones en parentesis
+    indexParentesis = [0]
+    currentExpresionLength = 0
+
     def DeclararVariable(self, id, valor):
         if id in self.symbolTable:
             msg = "Error: La variable ", id, " ya ha sido declarada"
@@ -43,6 +47,7 @@ class LittleDuckBaseParser(Parser):
             self.symbolTable[id]['valor'] = int(valor)
         self.Quads[self.cont] = ['=', id, valor]
         self.cont+=1
+        print(id, valor)
 
     def Imprimir(self):
         #print(self.strings)
@@ -62,6 +67,11 @@ class LittleDuckBaseParser(Parser):
     def ChecaTipoResultante(self, l, r, o):
         l_tipo = self.ObtenerTipo(l)
         r_tipo = self.ObtenerTipo(r)
+
+        if (o == '>' or o == '<'):
+            for li in self.typeMatchingTable:
+                if li[4][0] == l_tipo and li[4][1] == r_tipo:
+                    return li[4][2]
 
         if(o == '+'):
             for li in self.typeMatchingTable:
@@ -89,10 +99,21 @@ class LittleDuckBaseParser(Parser):
         # Checamos en el cubo semantico si la operacion es válida y le asignamos el tipo
         resultType = self.ChecaTipoResultante(l_oper, r_oper, operator)
 
-        # Imprimir cuadruplo para checar
 
         if self.ids:
             self.symbolTable[self.ids.pop()]['tipo'] = resultType
+
+        if operator == '<' and resultType != 'Error':
+            if l_oper < r_oper:
+                self.resultado = 1
+            else:
+                self.resultado = 0
+        
+        if operator == '>' and resultType != 'Error':
+            if l_oper > r_oper:
+                self.resultado = 1
+            else:
+                self.resultado = 0
 
         if operator == '+' and resultType != 'Error':
             self.resultado = l_oper + r_oper
@@ -105,10 +126,12 @@ class LittleDuckBaseParser(Parser):
 
         if operator == '/' and resultType != 'Error':
             self.resultado = l_oper / r_oper
+
         
         self.Quads[self.cont] = [operator, l_oper, r_oper, self.resultado]
         self.cont+=1
         self.operands.append(self.resultado)
+        self.currentExpresionLength-=1
 
     def ImprimirCuadruplos(self):
         print("Cuadruplos: ")

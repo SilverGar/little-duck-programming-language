@@ -50,7 +50,7 @@ estatuto
         escritura
         ;
 
-asigna: ID {$parser.ids.append($ID.text)} ASIGNA expresion {$parser.AsignarValor($ID.text, $parser.resultado)} PUNTOCOMA {$parser.operands.clear()} {$parser.resultado = 0} {$parser.ids.clear()};
+asigna: ID {$parser.ids.append($ID.text)} ASIGNA expresion {$parser.AsignarValor($ID.text, $parser.resultado)} PUNTOCOMA {$parser.operands.clear()} {$parser.resultado = 0} {$parser.ids.clear()} {$parser.currentExpresionLength = 0};
 
 condicion: SI INICIOPARENTESIS expresion FINPARENTESIS cuerpo sino PUNTOCOMA;
 sino
@@ -75,44 +75,50 @@ masstrings
         | /* epsilon */
         ;
 
-expresion: exp comprobarsimbolo;
+expresion:
+        exp
+        {if ($parser.currentExpresionLength > 1):
+                $parser.r_oper = $parser.operands.pop()
+                $parser.l_oper = $parser.operands.pop()
+                $parser.RealizarOperacion($parser.l_oper, $parser.r_oper, $parser.operators.pop())
+        } 
+        comprobarsimbolo;
 comprobarsimbolo
                 :
-                MAYORQUE exp
+                MAYORQUE
+                {$parser.operators.append($MAYORQUE.text)}
+                exp
                 |
-                MENORQUE exp
+                MENORQUE
+                {$parser.operators.append($MENORQUE.text)}
+                exp
                 | /* epsilon */
                 ;
 
 exp: 
    termino
-   {if (len($parser.operands) >= 2):
+   {if ($parser.currentExpresionLength > 1):
+        print($parser.operands)
         $parser.r_oper = $parser.operands.pop()
         $parser.l_oper = $parser.operands.pop()
         $parser.RealizarOperacion($parser.l_oper, $parser.r_oper, $parser.operators.pop())
-    }
+    } 
    comprobaroperacion;
 comprobaroperacion
                 :
                 SUMA
                 {$parser.operators.append($SUMA.text)}
                 exp
-                //{$parser.r_oper = $parser.operands.pop()}
-                //{$parser.l_oper = $parser.operands.pop()}
-                //{$parser.RealizarOperacion($parser.l_oper, $parser.r_oper, $parser.operators.pop())}
                 |
                 RESTA
                 {$parser.operators.append($RESTA.text)}
                 exp
-                //{$parser.r_oper = $parser.operands.pop()}
-                //{$parser.l_oper = $parser.operands.pop()}
-                //{$parser.RealizarOperacion($parser.l_oper, $parser.r_oper, $parser.operators.pop())}
                 | /* epsilon */
                 ;
 
 termino:
         factor
-        {if (len($parser.operators) >= 2):
+        {if ($parser.currentExpresionLength > 1):
                 $parser.r_oper = $parser.operands.pop()
                 $parser.l_oper = $parser.operands.pop()
                 $parser.RealizarOperacion($parser.l_oper, $parser.r_oper, $parser.operators.pop())
@@ -123,23 +129,27 @@ comprobarmultiplicacion
                         MULTIPLICA
                         {$parser.operators.append($MULTIPLICA.text)}
                         termino
-                        //{$parser.r_oper = $parser.operands.pop()}
-                        //{$parser.l_oper = $parser.operands.pop()}
-                        //{$parser.RealizarOperacion($parser.l_oper, $parser.r_oper, $parser.operators.pop())}
                         |
                         DIVIDE
                         {$parser.operators.append($DIVIDE.text)}
                         termino
-                        //{$parser.r_oper = $parser.operands.pop()}
-                        //{$parser.l_oper = $parser.operands.pop()}
-                        //{$parser.RealizarOperacion($parser.l_oper, $parser.r_oper, $parser.operators.pop())}
                         | /* epsilon */
                         ;
             
 factor: comprobarcte;
 comprobarcte
             :
-            INICIOPARENTESIS expresion FINPARENTESIS
+            INICIOPARENTESIS
+            {$parser.indexParentesis.append($parser.currentExpresionLength)}
+            {$parser.currentExpresionLength = 0}
+            expresion
+            {if (len($parser.operands) > 1):
+                $parser.r_oper = $parser.operands.pop()
+                $parser.l_oper = $parser.operands.pop()
+                $parser.RealizarOperacion($parser.l_oper, $parser.r_oper, $parser.operators.pop())
+            }
+            FINPARENTESIS
+            {$parser.currentExpresionLength = $parser.indexParentesis.pop()}
             |
             checasimbolo
             ;
@@ -155,11 +165,11 @@ checasimbolo
 
 varcte
     :
-    ID {$parser.operands.append($parser.symbolTable[$ID.text]['valor'])} {$parser.resultado = $parser.symbolTable[$ID.text]['valor']}
+    ID {$parser.operands.append($parser.symbolTable[$ID.text]['valor'])} {$parser.resultado = $parser.symbolTable[$ID.text]['valor']} {$parser.currentExpresionLength+=1}
     |
-    CTE_ENTERO {$parser.operands.append(int($CTE_ENTERO.text))} {$parser.resultado = int($CTE_ENTERO.text)}
+    CTE_ENTERO {$parser.operands.append(int($CTE_ENTERO.text))} {$parser.resultado = int($CTE_ENTERO.text)} {$parser.currentExpresionLength+=1}
     |
-    CTE_FLOTANTE {$parser.operands.append(float($CTE_FLOTANTE.text))} {$parser.resultado = float($CTE_FLOTANTE.text)}
+    CTE_FLOTANTE {$parser.operands.append(float($CTE_FLOTANTE.text))} {$parser.resultado = float($CTE_FLOTANTE.text)} {$parser.currentExpresionLength+=1}
     ;
 
 
