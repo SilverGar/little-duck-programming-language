@@ -22,6 +22,11 @@ class LittleDuckBaseParser(Parser):
 
     # Variables para imprimir
     strings = []
+
+    # Cuadruplos
+    Quads = {}
+    cont = 1;
+
     def DeclararVariable(self, id, valor):
         if id in self.symbolTable:
             msg = "Error: La variable ", id, " ya ha sido declarada"
@@ -36,7 +41,8 @@ class LittleDuckBaseParser(Parser):
             self.symbolTable[id]['valor'] = float(valor)
         else:
             self.symbolTable[id]['valor'] = int(valor)
-        #print(self.symbolTable)
+        self.Quads[self.cont] = ['=', id, valor]
+        self.cont+=1
 
     def Imprimir(self):
         #print(self.strings)
@@ -44,7 +50,6 @@ class LittleDuckBaseParser(Parser):
             element = str(element)
             element = element.replace("\"", "")
             print(element, end="")
-            #self.strings.pop(0)
         print(" ")
         self.strings.clear()
             
@@ -53,6 +58,7 @@ class LittleDuckBaseParser(Parser):
         tipoCompleto = str(type(operand)).replace('<class \'', '')
         tipo = tipoCompleto.replace('\'>', '')
         return tipo
+
     def ChecaTipoResultante(self, l, r, o):
         l_tipo = self.ObtenerTipo(l)
         r_tipo = self.ObtenerTipo(r)
@@ -76,8 +82,15 @@ class LittleDuckBaseParser(Parser):
             for li in self.typeMatchingTable:
                 if li[3][0] == l_tipo and li[3][1] == r_tipo:
                     return li[3][2]
+                
+    
+
     def RealizarOperacion(self, l_oper, r_oper, operator):
+        # Checamos en el cubo semantico si la operacion es válida y le asignamos el tipo
         resultType = self.ChecaTipoResultante(l_oper, r_oper, operator)
+
+        # Imprimir cuadruplo para checar
+
         if self.ids:
             self.symbolTable[self.ids.pop()]['tipo'] = resultType
 
@@ -92,10 +105,20 @@ class LittleDuckBaseParser(Parser):
 
         if operator == '/' and resultType != 'Error':
             self.resultado = l_oper / r_oper
+        
+        self.Quads[self.cont] = [operator, l_oper, r_oper, self.resultado]
+        self.cont+=1
+        self.operands.append(self.resultado)
+
+    def ImprimirCuadruplos(self):
+        print("Cuadruplos: ")
+        for quad, value in self.Quads.items():
+            print(quad, value, "")
+
 
     # Funcion para probar que se llena la tabla de variables
     def ImprimirTabla(self):
-        print('\n', "Tabla de variables:")
+        print("Tabla de variables:")
         for var in self.symbolTable:
             print(var, ':', self.symbolTable[var])
         #print(self.symbolTable)

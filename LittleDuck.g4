@@ -4,7 +4,7 @@ grammar LittleDuck;
 options {superClass = LittleDuckBaseParser; }
 
 // Definicion de gramatica
-prog: PROG ID PUNTOCOMA comprobarvars cuerpo; // Agregue codigo al final de esta regla para hacer pruebas
+prog: PROG ID PUNTOCOMA comprobarvars cuerpo {$parser.ImprimirCuadruplos()} {$parser.ImprimirTabla()}; // Agregue codigo al final de esta regla para hacer pruebas
 comprobarvars
             :
             vars
@@ -84,41 +84,55 @@ comprobarsimbolo
                 | /* epsilon */
                 ;
 
-exp: termino comprobaroperacion;
+exp: 
+   termino
+   {if (len($parser.operands) >= 2):
+        $parser.r_oper = $parser.operands.pop()
+        $parser.l_oper = $parser.operands.pop()
+        $parser.RealizarOperacion($parser.l_oper, $parser.r_oper, $parser.operators.pop())
+    }
+   comprobaroperacion;
 comprobaroperacion
                 :
                 SUMA
                 {$parser.operators.append($SUMA.text)}
                 exp
-                {$parser.r_oper = $parser.operands.pop()}
-                {$parser.l_oper = $parser.operands.pop()}
-                {$parser.RealizarOperacion($parser.l_oper, $parser.r_oper, $parser.operators.pop())}
+                //{$parser.r_oper = $parser.operands.pop()}
+                //{$parser.l_oper = $parser.operands.pop()}
+                //{$parser.RealizarOperacion($parser.l_oper, $parser.r_oper, $parser.operators.pop())}
                 |
                 RESTA
                 {$parser.operators.append($RESTA.text)}
                 exp
-                {$parser.r_oper = $parser.operands.pop()}
-                {$parser.l_oper = $parser.operands.pop()}
-                {$parser.RealizarOperacion($parser.l_oper, $parser.r_oper, $parser.operators.pop())}
+                //{$parser.r_oper = $parser.operands.pop()}
+                //{$parser.l_oper = $parser.operands.pop()}
+                //{$parser.RealizarOperacion($parser.l_oper, $parser.r_oper, $parser.operators.pop())}
                 | /* epsilon */
                 ;
 
-termino: factor comprobarmultiplicacion;
+termino:
+        factor
+        {if (len($parser.operators) >= 2):
+                $parser.r_oper = $parser.operands.pop()
+                $parser.l_oper = $parser.operands.pop()
+                $parser.RealizarOperacion($parser.l_oper, $parser.r_oper, $parser.operators.pop())
+        }
+        comprobarmultiplicacion;
 comprobarmultiplicacion
                         :
                         MULTIPLICA
                         {$parser.operators.append($MULTIPLICA.text)}
                         termino
-                        {$parser.r_oper = $parser.operands.pop()}
-                        {$parser.l_oper = $parser.operands.pop()}
-                        {$parser.RealizarOperacion($parser.l_oper, $parser.r_oper, $parser.operators.pop())}
+                        //{$parser.r_oper = $parser.operands.pop()}
+                        //{$parser.l_oper = $parser.operands.pop()}
+                        //{$parser.RealizarOperacion($parser.l_oper, $parser.r_oper, $parser.operators.pop())}
                         |
                         DIVIDE
                         {$parser.operators.append($DIVIDE.text)}
                         termino
-                        {$parser.r_oper = $parser.operands.pop()}
-                        {$parser.l_oper = $parser.operands.pop()}
-                        {$parser.RealizarOperacion($parser.l_oper, $parser.r_oper, $parser.operators.pop())}
+                        //{$parser.r_oper = $parser.operands.pop()}
+                        //{$parser.l_oper = $parser.operands.pop()}
+                        //{$parser.RealizarOperacion($parser.l_oper, $parser.r_oper, $parser.operators.pop())}
                         | /* epsilon */
                         ;
             
