@@ -39,9 +39,15 @@ class LittleDuckBaseParser(Parser):
         #print(self.symbolTable)
 
     def Imprimir(self):
-        for string in self.strings:
-            print(string, end = " ")
+        #print(self.strings)
+        for element in self.strings:
+            element = str(element)
+            element = element.replace("\"", "")
+            print(element, end="")
             #self.strings.pop(0)
+        print(" ")
+        self.strings.clear()
+            
 
     def ObtenerTipo(self, operand):
         tipoCompleto = str(type(operand)).replace('<class \'', '')
