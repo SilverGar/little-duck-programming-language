@@ -52,11 +52,13 @@ estatuto
 
 asigna: ID {$parser.ids.append($ID.text)} ASIGNA expresion {$parser.AsignarValor($ID.text, $parser.resultado)} PUNTOCOMA {$parser.operands.clear()} {$parser.resultado = 0} {$parser.ids.clear()} {$parser.currentExpresionLength = 0};
 
-condicion: SI INICIOPARENTESIS expresion FINPARENTESIS cuerpo sino PUNTOCOMA;
+condicion: SI  INICIOPARENTESIS expresion FINPARENTESIS {$parser.operands.clear()} {$parser.resultado = 0} {$parser.ids.clear()} {$parser.currentExpresionLength = 0} {$parser.GoToF()} cuerpo {$parser.FillGoToF()} sino PUNTOCOMA;
 sino
     :
+    {$parser.GoTo()}
     SINO
     cuerpo
+    {$parser.FillGoTo()}
     | /* epsilon */
     ;
 

@@ -31,6 +31,9 @@ class LittleDuckBaseParser(Parser):
     indexParentesis = [0]
     currentExpresionLength = 0
 
+    # Variables para ejecución no linear
+    pSaltos = []
+
     def DeclararVariable(self, id, valor):
         if id in self.symbolTable:
             msg = "Error: La variable ", id, " ya ha sido declarada"
@@ -45,9 +48,10 @@ class LittleDuckBaseParser(Parser):
             self.symbolTable[id]['valor'] = float(valor)
         else:
             self.symbolTable[id]['valor'] = int(valor)
+
+        # Generar Cuadruplo
         self.Quads[self.cont] = ['=', id, valor]
         self.cont+=1
-        print(id, valor)
 
     def Imprimir(self):
         #print(self.strings)
@@ -55,7 +59,12 @@ class LittleDuckBaseParser(Parser):
             element = str(element)
             element = element.replace("\"", "")
             print(element, end="")
+            # Generar cuadruplo
+            self.Quads[self.cont] = ['print', element]
+            self.cont+=1
+
         print(" ")
+        
         self.strings.clear()
             
 
@@ -127,7 +136,7 @@ class LittleDuckBaseParser(Parser):
         if operator == '/' and resultType != 'Error':
             self.resultado = l_oper / r_oper
 
-        
+        # Generar cuadruplo
         self.Quads[self.cont] = [operator, l_oper, r_oper, self.resultado]
         self.cont+=1
         self.operands.append(self.resultado)
@@ -138,6 +147,21 @@ class LittleDuckBaseParser(Parser):
         for quad, value in self.Quads.items():
             print(quad, value, "")
 
+    def FillGoToF(self):
+        self.Quads[self.pSaltos.pop()][1] = self.cont+1
+
+    def FillGoTo(self):
+        self.Quads[self.pSaltos.pop()][1] = self.cont
+
+    def GoToF(self):
+        self.Quads[self.cont] = ['GotoF', '']
+        self.pSaltos.append(self.cont)
+        self.cont+=1
+
+    def GoTo(self):
+        self.Quads[self.cont] = ['Goto', '']
+        self.pSaltos.append(self.cont)
+        self.cont+=1
 
     # Funcion para probar que se llena la tabla de variables
     def ImprimirTabla(self):
