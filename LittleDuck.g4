@@ -62,7 +62,7 @@ sino
     | /* epsilon */
     ;
 
-ciclo: MIENTRAS INICIOPARENTESIS expresion FINPARENTESIS cuerpo PUNTOCOMA;
+ciclo: MIENTRAS INICIOPARENTESIS expresion FINPARENTESIS {$parser.operands.clear()} {$parser.resultado = 0} {$parser.ids.clear()} {$parser.currentExpresionLength = 0} {$parser.pSaltosMientras.append($parser.cont)} {$parser.GoToF()} cuerpo {$parser.GoToMientras()} PUNTOCOMA {$parser.FillGoToF()};
 
 escritura: IMPRIMIR INICIOPARENTESIS string {$parser.Imprimir()} FINPARENTESIS PUNTOCOMA;
 string
@@ -167,7 +167,7 @@ checasimbolo
 
 varcte
     :
-    ID {$parser.operands.append($parser.symbolTable[$ID.text]['valor'])} {$parser.resultado = $parser.symbolTable[$ID.text]['valor']} {$parser.currentExpresionLength+=1}
+    ID {$parser.operands.append($ID.text)} {$parser.resultado = $parser.symbolTable[$ID.text]['valor']} {$parser.currentExpresionLength+=1}
     |
     CTE_ENTERO {$parser.operands.append(int($CTE_ENTERO.text))} {$parser.resultado = int($CTE_ENTERO.text)} {$parser.currentExpresionLength+=1}
     |

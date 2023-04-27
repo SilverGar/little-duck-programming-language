@@ -12,5 +12,8 @@ si(1>5)[
 ]sino[
 	b = 10;
 ];
+mientras(a>b)[
+	print(a);
+]
 a = 10;
 ]

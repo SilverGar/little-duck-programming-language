@@ -26,6 +26,7 @@ class LittleDuckBaseParser(Parser):
     # Cuadruplos
     Quads = {}
     cont = 1;
+    ts = 1
 
     # Variables para expresiones en parentesis
     indexParentesis = [0]
@@ -33,6 +34,7 @@ class LittleDuckBaseParser(Parser):
 
     # Variables para ejecución no linear
     pSaltos = []
+    pSaltosMientras = []
 
     def DeclararVariable(self, id, valor):
         if id in self.symbolTable:
@@ -102,45 +104,95 @@ class LittleDuckBaseParser(Parser):
                 if li[3][0] == l_tipo and li[3][1] == r_tipo:
                     return li[3][2]
                 
-    
+    def GenerarCuadruploOperacion(self, l_oper, r_oper, operator):
+        # Checamos en el cubo semantico si la operacion es válida y le asignamos el tipo
+        resultType = self.ChecaTipoResultante(l_oper, r_oper, operator)
+        contVarA = False
+        contVarB = False
+
+        resultado = 't'+self.ts
+        self.ts+=1
+
+        self.Quads[self.cont] = [operator, l_oper, r_oper, resultado]
+        self.cont+=1
+        self.operands.append(self.resultado)
+        self.currentExpresionLength-=1        
+
 
     def RealizarOperacion(self, l_oper, r_oper, operator):
         # Checamos en el cubo semantico si la operacion es válida y le asignamos el tipo
         resultType = self.ChecaTipoResultante(l_oper, r_oper, operator)
+        contVarA = False
+        contVarB = False
+
+        if l_oper in self.symbolTable:
+            l_valor = self.symbolTable[l_oper]['valor']
+            contVarA = True
+        else:
+            l_valor = l_oper
+
+
+        if r_oper in self.symbolTable:
+            r_valor =  self.symbolTable[r_oper]['valor']
+            contVarB = True
+        else:
+            r_valor = r_oper
 
 
         if self.ids:
             self.symbolTable[self.ids.pop()]['tipo'] = resultType
 
         if operator == '<' and resultType != 'Error':
-            if l_oper < r_oper:
+            if l_valor < r_valor:
                 self.resultado = 1
             else:
                 self.resultado = 0
         
         if operator == '>' and resultType != 'Error':
-            if l_oper > r_oper:
+            if l_valor > r_valor:
                 self.resultado = 1
             else:
                 self.resultado = 0
 
         if operator == '+' and resultType != 'Error':
-            self.resultado = l_oper + r_oper
+            self.resultado = l_valor + r_valor
 
         if operator == '-' and resultType != 'Error':
-            self.resultado = l_oper - r_oper
+            self.resultado = l_valor - r_valor
 
         if operator == '*' and resultType != 'Error':
-            self.resultado = l_oper * r_oper
+            self.resultado = l_valor * r_valor
 
         if operator == '/' and resultType != 'Error':
-            self.resultado = l_oper / r_oper
+            self.resultado = l_valor / r_valor
 
         # Generar cuadruplo
-        self.Quads[self.cont] = [operator, l_oper, r_oper, self.resultado]
-        self.cont+=1
-        self.operands.append(self.resultado)
-        self.currentExpresionLength-=1
+        if contVarA and contVarB:
+            self.Quads[self.cont] = [operator, l_oper, r_oper, self.resultado]
+            self.cont+=1
+            self.operands.append(self.resultado)
+            self.currentExpresionLength-=1
+        elif contVarA:
+            self.Quads[self.cont] = [operator, l_oper, r_valor, self.resultado]
+            self.cont+=1
+            self.operands.append(self.resultado)
+            self.currentExpresionLength-=1
+        elif contVarB:
+            self.Quads[self.cont] = [operator, l_valor, r_oper, self.resultado]
+            self.cont+=1
+            self.operands.append(self.resultado)
+            self.currentExpresionLength-=1
+        else:
+            self.Quads[self.cont] = [operator, l_valor, r_valor, self.resultado]
+            self.cont+=1
+            self.operands.append(self.resultado)
+            self.currentExpresionLength-=1
+
+
+        #self.Quads[self.cont] = [operator, l_oper, r_oper, self.resultado]
+        #self.cont+=1
+        #self.operands.append(self.resultado)
+        #self.currentExpresionLength-=1
 
     def ImprimirCuadruplos(self):
         print("Cuadruplos: ")
@@ -161,6 +213,10 @@ class LittleDuckBaseParser(Parser):
     def GoTo(self):
         self.Quads[self.cont] = ['Goto', '']
         self.pSaltos.append(self.cont)
+        self.cont+=1
+
+    def GoToMientras(self):
+        self.Quads[self.cont] = ['Goto', self.pSaltosMientras.pop()-1]
         self.cont+=1
 
     # Funcion para probar que se llena la tabla de variables
