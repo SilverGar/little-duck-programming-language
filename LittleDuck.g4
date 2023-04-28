@@ -50,7 +50,7 @@ estatuto
         escritura
         ;
 
-asigna: ID {$parser.ids.append($ID.text)} ASIGNA expresion {$parser.AsignarValor($ID.text, $parser.resultado)} PUNTOCOMA {$parser.operands.clear()} {$parser.resultado = 0} {$parser.ids.clear()} {$parser.currentExpresionLength = 0};
+asigna: ID {$parser.ids.append($ID.text)} ASIGNA expresion {$parser.AsignarValor($ID.text, $parser.resultado)} {$parser.CuadruploAsignarValor($ID.text, $parser.operands.pop())} PUNTOCOMA {$parser.operands.clear()} {$parser.resultado = 0} {$parser.ids.clear()} {$parser.currentExpresionLength = 0};
 
 condicion: SI  INICIOPARENTESIS expresion FINPARENTESIS {$parser.operands.clear()} {$parser.resultado = 0} {$parser.ids.clear()} {$parser.currentExpresionLength = 0} {$parser.GoToF()} cuerpo {$parser.FillGoToF()} sino PUNTOCOMA;
 sino
@@ -62,14 +62,14 @@ sino
     | /* epsilon */
     ;
 
-ciclo: MIENTRAS INICIOPARENTESIS expresion FINPARENTESIS {$parser.operands.clear()} {$parser.resultado = 0} {$parser.ids.clear()} {$parser.currentExpresionLength = 0} {$parser.pSaltosMientras.append($parser.cont)} {$parser.GoToF()} cuerpo {$parser.GoToMientras()} PUNTOCOMA {$parser.FillGoToF()};
+ciclo: MIENTRAS INICIOPARENTESIS expresion FINPARENTESIS {$parser.operands.clear()} {$parser.resultado = 0} {$parser.ids.clear()} {$parser.currentExpresionLength = 0} {$parser.pSaltosMientras.append($parser.cont)} {$parser.GoToF()} cuerpo {$parser.GoToMientras()} PUNTOCOMA {$parser.FillGoToFMientras()} {$parser.operands.clear()} {$parser.resultado = 0} {$parser.ids.clear()} {$parser.currentExpresionLength = 0} {$parser.pSaltosMientras.append($parser.cont)};
 
 escritura: IMPRIMIR INICIOPARENTESIS string {$parser.Imprimir()} FINPARENTESIS PUNTOCOMA;
 string
         :
         CTE_STRING {$parser.strings.append($CTE_STRING.text)} masstrings
         |
-        expresion {$parser.strings.append($parser.symbolTable[$expresion.text]['valor'])} masstrings
+        expresion {$parser.strings.append($expresion.text)} masstrings
         ;
 masstrings
         :
@@ -79,10 +79,10 @@ masstrings
 
 expresion:
         exp
-        {if ($parser.currentExpresionLength > 1):
+        {if ($parser.currentExpresionLength > 1 and not $parser.strings):
                 $parser.r_oper = $parser.operands.pop()
                 $parser.l_oper = $parser.operands.pop()
-                $parser.RealizarOperacion($parser.l_oper, $parser.r_oper, $parser.operators.pop())
+                $parser.GenerarCuadruploOperacion($parser.l_oper, $parser.r_oper, $parser.operators.pop())
         } 
         comprobarsimbolo;
 comprobarsimbolo
@@ -99,11 +99,10 @@ comprobarsimbolo
 
 exp: 
    termino
-   {if ($parser.currentExpresionLength > 1):
-        print($parser.operands)
+   {if ($parser.currentExpresionLength > 1 and not $parser.strings):
         $parser.r_oper = $parser.operands.pop()
         $parser.l_oper = $parser.operands.pop()
-        $parser.RealizarOperacion($parser.l_oper, $parser.r_oper, $parser.operators.pop())
+        $parser.GenerarCuadruploOperacion($parser.l_oper, $parser.r_oper, $parser.operators.pop())
     } 
    comprobaroperacion;
 comprobaroperacion
@@ -120,10 +119,10 @@ comprobaroperacion
 
 termino:
         factor
-        {if ($parser.currentExpresionLength > 1):
+        {if ($parser.currentExpresionLength > 1 and not $parser.strings):
                 $parser.r_oper = $parser.operands.pop()
                 $parser.l_oper = $parser.operands.pop()
-                $parser.RealizarOperacion($parser.l_oper, $parser.r_oper, $parser.operators.pop())
+                $parser.GenerarCuadruploOperacion($parser.l_oper, $parser.r_oper, $parser.operators.pop())
         }
         comprobarmultiplicacion;
 comprobarmultiplicacion
@@ -148,7 +147,7 @@ comprobarcte
             {if (len($parser.operands) > 1):
                 $parser.r_oper = $parser.operands.pop()
                 $parser.l_oper = $parser.operands.pop()
-                $parser.RealizarOperacion($parser.l_oper, $parser.r_oper, $parser.operators.pop())
+                $parser.GenerarCuadruploOperacion($parser.l_oper, $parser.r_oper, $parser.operators.pop())
             }
             FINPARENTESIS
             {$parser.currentExpresionLength = $parser.indexParentesis.pop()}

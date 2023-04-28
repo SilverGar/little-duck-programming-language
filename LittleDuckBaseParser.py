@@ -51,16 +51,17 @@ class LittleDuckBaseParser(Parser):
         else:
             self.symbolTable[id]['valor'] = int(valor)
 
+
+    def CuadruploAsignarValor(self, id, valor):
         # Generar Cuadruplo
         self.Quads[self.cont] = ['=', id, valor]
         self.cont+=1
 
     def Imprimir(self):
-        #print(self.strings)
         for element in self.strings:
             element = str(element)
             element = element.replace("\"", "")
-            print(element, end="")
+            #print(element, end="")
             # Generar cuadruplo
             self.Quads[self.cont] = ['print', element]
             self.cont+=1
@@ -110,12 +111,12 @@ class LittleDuckBaseParser(Parser):
         contVarA = False
         contVarB = False
 
-        resultado = 't'+self.ts
+        resultado = 't'+str(self.ts)
         self.ts+=1
 
         self.Quads[self.cont] = [operator, l_oper, r_oper, resultado]
         self.cont+=1
-        self.operands.append(self.resultado)
+        self.operands.append(resultado)
         self.currentExpresionLength-=1        
 
 
@@ -201,6 +202,9 @@ class LittleDuckBaseParser(Parser):
 
     def FillGoToF(self):
         self.Quads[self.pSaltos.pop()][1] = self.cont+1
+
+    def FillGoToFMientras(self):
+        self.Quads[self.pSaltos.pop()][1] = self.cont
 
     def FillGoTo(self):
         self.Quads[self.pSaltos.pop()][1] = self.cont
