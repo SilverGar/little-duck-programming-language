@@ -36,6 +36,9 @@ class LittleDuckBaseParser(Parser):
     pSaltos = []
     pSaltosMientras = []
 
+    memory = [None] * 1000
+
+
     def DeclararVariable(self, id, valor):
         if id in self.symbolTable:
             msg = "Error: La variable ", id, " ya ha sido declarada"
@@ -54,7 +57,8 @@ class LittleDuckBaseParser(Parser):
 
     def CuadruploAsignarValor(self, id, valor):
         # Generar Cuadruplo
-        self.Quads[self.cont] = ['=', id, valor]
+        self.Quads[self.cont] = ['=', id, None, valor]
+        #print(self.Quads[self.cont])
         self.cont+=1
 
     def Imprimir(self):
@@ -63,10 +67,9 @@ class LittleDuckBaseParser(Parser):
             element = element.replace("\"", "")
             #print(element, end="")
             # Generar cuadruplo
-            self.Quads[self.cont] = ['print', element]
+            self.Quads[self.cont] = ['print', element, None, None]
+            #print(self.Quads[self.cont])
             self.cont+=1
-
-        print(" ")
         
         self.strings.clear()
             
@@ -115,86 +118,13 @@ class LittleDuckBaseParser(Parser):
         self.ts+=1
 
         self.Quads[self.cont] = [operator, l_oper, r_oper, resultado]
+        #print(self.Quads[self.cont])
         self.cont+=1
         self.operands.append(resultado)
         self.currentExpresionLength-=1        
 
 
-    def RealizarOperacion(self, l_oper, r_oper, operator):
-        # Checamos en el cubo semantico si la operacion es válida y le asignamos el tipo
-        resultType = self.ChecaTipoResultante(l_oper, r_oper, operator)
-        contVarA = False
-        contVarB = False
-
-        if l_oper in self.symbolTable:
-            l_valor = self.symbolTable[l_oper]['valor']
-            contVarA = True
-        else:
-            l_valor = l_oper
-
-
-        if r_oper in self.symbolTable:
-            r_valor =  self.symbolTable[r_oper]['valor']
-            contVarB = True
-        else:
-            r_valor = r_oper
-
-
-        if self.ids:
-            self.symbolTable[self.ids.pop()]['tipo'] = resultType
-
-        if operator == '<' and resultType != 'Error':
-            if l_valor < r_valor:
-                self.resultado = 1
-            else:
-                self.resultado = 0
-        
-        if operator == '>' and resultType != 'Error':
-            if l_valor > r_valor:
-                self.resultado = 1
-            else:
-                self.resultado = 0
-
-        if operator == '+' and resultType != 'Error':
-            self.resultado = l_valor + r_valor
-
-        if operator == '-' and resultType != 'Error':
-            self.resultado = l_valor - r_valor
-
-        if operator == '*' and resultType != 'Error':
-            self.resultado = l_valor * r_valor
-
-        if operator == '/' and resultType != 'Error':
-            self.resultado = l_valor / r_valor
-
-        # Generar cuadruplo
-        if contVarA and contVarB:
-            self.Quads[self.cont] = [operator, l_oper, r_oper, self.resultado]
-            self.cont+=1
-            self.operands.append(self.resultado)
-            self.currentExpresionLength-=1
-        elif contVarA:
-            self.Quads[self.cont] = [operator, l_oper, r_valor, self.resultado]
-            self.cont+=1
-            self.operands.append(self.resultado)
-            self.currentExpresionLength-=1
-        elif contVarB:
-            self.Quads[self.cont] = [operator, l_valor, r_oper, self.resultado]
-            self.cont+=1
-            self.operands.append(self.resultado)
-            self.currentExpresionLength-=1
-        else:
-            self.Quads[self.cont] = [operator, l_valor, r_valor, self.resultado]
-            self.cont+=1
-            self.operands.append(self.resultado)
-            self.currentExpresionLength-=1
-
-
-        #self.Quads[self.cont] = [operator, l_oper, r_oper, self.resultado]
-        #self.cont+=1
-        #self.operands.append(self.resultado)
-        #self.currentExpresionLength-=1
-
+    
     def ImprimirCuadruplos(self):
         print("Cuadruplos: ")
         for quad, value in self.Quads.items():
@@ -210,17 +140,20 @@ class LittleDuckBaseParser(Parser):
         self.Quads[self.pSaltos.pop()][1] = self.cont
 
     def GoToF(self):
-        self.Quads[self.cont] = ['GotoF', '']
+        self.Quads[self.cont] = ['GotoF', '', None, None]
         self.pSaltos.append(self.cont)
+        #print(self.Quads[self.cont])
         self.cont+=1
 
     def GoTo(self):
-        self.Quads[self.cont] = ['Goto', '']
+        self.Quads[self.cont] = ['Goto', '', None, None]
         self.pSaltos.append(self.cont)
+        #print(self.Quads[self.cont])
         self.cont+=1
 
     def GoToMientras(self):
-        self.Quads[self.cont] = ['Goto', self.pSaltosMientras.pop()-1]
+        self.Quads[self.cont] = ['Goto', self.pSaltosMientras.pop()-1, None, None]
+        #print(self.Quads[self.cont])
         self.cont+=1
 
     # Funcion para probar que se llena la tabla de variables
@@ -229,3 +162,365 @@ class LittleDuckBaseParser(Parser):
         for var in self.symbolTable:
             print(var, ':', self.symbolTable[var])
         #print(self.symbolTable)
+
+
+    def CambiarCuadruploAMemoria(self):
+        # Virtual addresses
+        # Global memory: 100 - 199
+        # Numerical consts: 200 - 299
+        # Temp memory: 500 - 599
+        # =: 1
+        # +: 2
+        # -: 3
+        # *: 4
+        # /: 5
+        # <: 6
+        # >: 7
+        # print: 8
+        
+
+        # Change Quadruples to memory location:
+        # Variables para contar localizacion de memoria 
+        cont_global = 0
+        cont_const = 0
+        cont_temp = 0
+        memory = [None] * 1000
+        # Almacena variables globales y su localizacion en memoria
+        var_loc = {}
+        # Almacena variables tempoarles y su localizacion
+        temp_var_loc = {}
+        for quadruple, value in self.Quads.items():
+            # Asigna
+            if value[0] == '=':
+                # Cambiamos el primer caracter del cuadruplo por el num de operacion correspondiente
+                value[0] = 1
+                # Checamos si el valor de variable del cuadruplo ya esta agregada a la memoria
+                # si si esta, solo cambiamos el cuadruplo por la direccion de memoria
+                # si no esta, la agregamos al diccionario de variables y la direccion la agregamos al cuadruplo
+                if value[1] in var_loc:
+                    value[1] = var_loc[value[1]]
+                else:
+                    var_loc[value[1]] = cont_global+100
+                    value[1] = var_loc[value[1]]
+                    cont_global+=1
+
+                # Checamos si el valor a asignar es una constante o no
+                is_const = True
+                try:
+                    int(value[3])
+                except ValueError:
+                    is_const = False
+
+                if is_const:
+                    memory[cont_const + 200] = value[3]
+                    value[3] = cont_const + 200
+                    cont_const+=1
+                else:
+                    # Si no es una constante, checamos si es una variable global o temporal
+                    if value[3] in var_loc:
+                        value[3] = var_loc[value[3]]
+                    else:
+                        value[3] = temp_var_loc[value[3]]
+
+            # Print
+            if value[0] == 'print':
+                value[0] = 8
+
+                # Checamos si el valor de variable del cuadruplo ya esta agregada a la memoria
+                # si si esta, solo cambiamos el cuadruplo por la direccion de memoria
+                # si no esta, entonces probamos si es un string o una constante
+                if value[1] in var_loc:
+                    value[1] = var_loc[value[1]]
+                else:
+                    is_const = True
+                    try:
+                        int(value[1])
+                    except ValueError:
+                        is_const = False
+
+                    if is_const:
+                        memory[cont_const + 200] = value[1]
+                        value[1] = cont_const + 200
+                        cont_const+=1
+                    else:
+                        # Si no es una constante, checamos si es una variable temporal
+                        if value[1] in temp_var_loc:
+                            value[1] = temp_var_loc[value[1]]
+                        else:
+                            # Almacenamos valor en variable temporal
+                            temp_var_loc[value[1]] = cont_temp + 500
+                            value[1] = cont_temp + 500
+                            cont_temp+=1
+
+
+
+            # Suma
+            if value[0] == '+':
+                value[0] = 2
+                
+                # Checamos si el operando izquierdo es una constante o no
+                is_const = True
+                try:
+                    int(value[1])
+                except ValueError:
+                    is_const = False
+
+                if is_const:
+                    memory[cont_const + 200] = value[1]
+                    value[1] = cont_const + 200
+                    cont_const+=1
+                else:
+                    # Si no es una constante, checamos si es una variable global o temporal
+                    if value[1] in var_loc:
+                        value[1] = var_loc[value[1]]
+                    else:
+                        value[1] = temp_var_loc[value[1]]
+                    
+                # Checamos si el operando derecho es una constante o no
+                is_const = True
+                try:
+                    int(value[2])
+                except ValueError:
+                    is_const = False
+
+                if is_const:
+                    memory[cont_const + 200] = value[2]
+                    value[2] = cont_const + 200
+                    cont_const+=1
+                else:
+                    # Si no es una constante, checamos si es una variable global o temporal
+                    if value[2] in var_loc:
+                        value[2] = var_loc[value[2]]
+                    else:
+                        value[2] = temp_var_loc[value[2]]
+                
+                # Almacenamos valor en variable temporal
+                temp_var_loc[value[3]] = cont_temp + 500
+                value[3] = cont_temp + 500
+                cont_temp+=1
+            
+            # Resta
+            if value[0] == '-':
+                value[0] = 3
+                
+                # Checamos si el operando izquierdo es una constante o no
+                is_const = True
+                try:
+                    int(value[1])
+                except ValueError:
+                    is_const = False
+
+                if is_const:
+                    memory[cont_const + 200] = value[1]
+                    value[1] = cont_const + 200
+                    cont_const+=1
+                else:
+                    # Si no es una constante, checamos si es una variable global o temporal
+                    if value[1] in var_loc:
+                        value[1] = var_loc[value[1]]
+                    else:
+                        value[1] = temp_var_loc[value[1]]
+                    
+                # Checamos si el operando derecho es una constante o no
+                is_const = True
+                try:
+                    int(value[2])
+                except ValueError:
+                    is_const = False
+
+                if is_const:
+                    memory[cont_const + 200] = value[2]
+                    value[2] = cont_const + 200
+                    cont_const+=1
+                else:
+                    # Si no es una constante, checamos si es una variable global o temporal
+                    if value[2] in var_loc:
+                        value[2] = var_loc[value[2]]
+                    else:
+                        value[2] = temp_var_loc[value[2]]
+                
+                # Almacenamos valor en variable temporal
+                temp_var_loc[value[3]] = cont_temp + 500
+                value[3] = cont_temp + 500
+                cont_temp+=1
+            
+            # Multiplicacion
+            if value[0] == '*':
+                value[0] = 4
+                
+                # Checamos si el operando izquierdo es una constante o no
+                is_const = True
+                try:
+                    int(value[1])
+                except ValueError:
+                    is_const = False
+
+                if is_const:
+                    memory[cont_const + 200] = value[1]
+                    value[1] = cont_const + 200
+                    cont_const+=1
+                else:
+                    # Si no es una constante, checamos si es una variable global o temporal
+                    if value[1] in var_loc:
+                        value[1] = var_loc[value[1]]
+                    else:
+                        value[1] = temp_var_loc[value[1]]
+                    
+                # Checamos si el operando derecho es una constante o no
+                is_const = True
+                try:
+                    int(value[2])
+                except ValueError:
+                    is_const = False
+
+                if is_const:
+                    memory[cont_const + 200] = value[2]
+                    value[2] = cont_const + 200
+                    cont_const+=1
+                else:
+                    # Si no es una constante, checamos si es una variable global o temporal
+                    if value[2] in var_loc:
+                        value[2] = var_loc[value[2]]
+                    else:
+                        value[2] = temp_var_loc[value[2]]
+                
+                # Almacenamos valor en variable temporal
+                temp_var_loc[value[3]] = cont_temp + 500
+                value[3] = cont_temp + 500
+                cont_temp+=1
+
+            # Division
+            if value[0] == '/':
+                value[0] = 5
+                
+                # Checamos si el operando izquierdo es una constante o no
+                is_const = True
+                try:
+                    int(value[1])
+                except ValueError:
+                    is_const = False
+
+                if is_const:
+                    memory[cont_const + 200] = value[1]
+                    value[1] = cont_const + 200
+                    cont_const+=1
+                else:
+                    # Si no es una constante, checamos si es una variable global o temporal
+                    if value[1] in var_loc:
+                        value[1] = var_loc[value[1]]
+                    else:
+                        value[1] = temp_var_loc[value[1]]
+                    
+                # Checamos si el operando derecho es una constante o no
+                is_const = True
+                try:
+                    int(value[2])
+                except ValueError:
+                    is_const = False
+
+                if is_const:
+                    memory[cont_const + 200] = value[2]
+                    value[2] = cont_const + 200
+                    cont_const+=1
+                else:
+                    # Si no es una constante, checamos si es una variable global o temporal
+                    if value[2] in var_loc:
+                        value[2] = var_loc[value[2]]
+                    else:
+                        value[2] = temp_var_loc[value[2]]
+                
+                # Almacenamos valor en variable temporal
+                temp_var_loc[value[3]] = cont_temp + 500
+                value[3] = cont_temp + 500
+                cont_temp+=1
+
+            # Mayor que
+            if value[0] == '<':
+                value[0] = 6
+                
+                # Checamos si el operando izquierdo es una constante o no
+                is_const = True
+                try:
+                    int(value[1])
+                except ValueError:
+                    is_const = False
+
+                if is_const:
+                    memory[cont_const + 200] = value[1]
+                    value[1] = cont_const + 200
+                    cont_const+=1
+                else:
+                    # Si no es una constante, checamos si es una variable global o temporal
+                    if value[1] in var_loc:
+                        value[1] = var_loc[value[1]]
+                    else:
+                        value[1] = temp_var_loc[value[1]]
+                    
+                # Checamos si el operando derecho es una constante o no
+                is_const = True
+                try:
+                    int(value[2])
+                except ValueError:
+                    is_const = False
+
+                if is_const:
+                    memory[cont_const + 200] = value[2]
+                    value[2] = cont_const + 200
+                    cont_const+=1
+                else:
+                    # Si no es una constante, checamos si es una variable global o temporal
+                    if value[2] in var_loc:
+                        value[2] = var_loc[value[2]]
+                    else:
+                        value[2] = temp_var_loc[value[2]]
+                
+                # Almacenamos valor en variable temporal
+                temp_var_loc[value[3]] = cont_temp + 500
+                value[3] = cont_temp + 500
+                cont_temp+=1
+
+
+            # Division
+            if value[0] == '>':
+                value[0] = 7
+                
+                # Checamos si el operando izquierdo es una constante o no
+                is_const = True
+                try:
+                    int(value[1])
+                except ValueError:
+                    is_const = False
+
+                if is_const:
+                    memory[cont_const + 200] = value[1]
+                    value[1] = cont_const + 200
+                    cont_const+=1
+                else:
+                    # Si no es una constante, checamos si es una variable global o temporal
+                    if value[1] in var_loc:
+                        value[1] = var_loc[value[1]]
+                    else:
+                        value[1] = temp_var_loc[value[1]]
+                    
+                # Checamos si el operando derecho es una constante o no
+                is_const = True
+                try:
+                    int(value[2])
+                except ValueError:
+                    is_const = False
+
+                if is_const:
+                    memory[cont_const + 200] = value[2]
+                    value[2] = cont_const + 200
+                    cont_const+=1
+                else:
+                    # Si no es una constante, checamos si es una variable global o temporal
+                    if value[2] in var_loc:
+                        value[2] = var_loc[value[2]]
+                    else:
+                        value[2] = temp_var_loc[value[2]]
+                
+                # Almacenamos valor en variable temporal
+                temp_var_loc[value[3]] = cont_temp + 500
+                value[3] = cont_temp + 500
+                cont_temp+=1

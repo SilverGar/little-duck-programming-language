@@ -4,7 +4,7 @@ grammar LittleDuck;
 options {superClass = LittleDuckBaseParser; }
 
 // Definicion de gramatica
-prog: PROG ID PUNTOCOMA comprobarvars cuerpo {$parser.ImprimirCuadruplos()} {$parser.ImprimirTabla()}; // Agregue codigo al final de esta regla para hacer pruebas
+prog: PROG ID PUNTOCOMA comprobarvars cuerpo {$parser.CambiarCuadruploAMemoria()} {$parser.ImprimirCuadruplos()}; // Agregue codigo al final de esta regla para hacer pruebas
 comprobarvars
             :
             vars
@@ -41,16 +41,16 @@ comprobarestatuto
 
 estatuto
         :
-        asigna
+        asigna {$parser.operands.clear()} {$parser.resultado = 0} {$parser.ids.clear()} {$parser.currentExpresionLength = 0}
         |
-        condicion
+        condicion {$parser.operands.clear()} {$parser.resultado = 0} {$parser.ids.clear()} {$parser.currentExpresionLength = 0}
         |
         ciclo
         |
-        escritura
+        escritura {$parser.operands.clear()} {$parser.resultado = 0} {$parser.ids.clear()} {$parser.currentExpresionLength = 0}
         ;
 
-asigna: ID {$parser.ids.append($ID.text)} ASIGNA expresion {$parser.AsignarValor($ID.text, $parser.resultado)} {$parser.CuadruploAsignarValor($ID.text, $parser.operands.pop())} PUNTOCOMA {$parser.operands.clear()} {$parser.resultado = 0} {$parser.ids.clear()} {$parser.currentExpresionLength = 0};
+asigna: ID {$parser.ids.append($ID.text)} ASIGNA expresion {$parser.AsignarValor($ID.text, $parser.resultado)} {$parser.CuadruploAsignarValor($ID.text, $parser.operands.pop())} PUNTOCOMA;
 
 condicion: SI  INICIOPARENTESIS expresion FINPARENTESIS {$parser.operands.clear()} {$parser.resultado = 0} {$parser.ids.clear()} {$parser.currentExpresionLength = 0} {$parser.GoToF()} cuerpo {$parser.FillGoToF()} sino PUNTOCOMA;
 sino
