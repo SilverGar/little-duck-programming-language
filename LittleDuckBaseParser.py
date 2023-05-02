@@ -157,7 +157,7 @@ class LittleDuckBaseParser(Parser):
         self.cont+=1
 
     def GoToMientras(self):
-        self.Quads[self.cont] = ['Goto', '', self.pSaltosMientras.pop()-1, None]
+        self.Quads[self.cont] = ['GotoM', '', self.pSaltosMientras.pop()-1, None]
         #print(self.Quads[self.cont])
         self.cont+=1
 
@@ -551,9 +551,15 @@ class LittleDuckBaseParser(Parser):
                 #temp_var_loc[value[1]] = cont_temp + 500
                 value[1] = cont_temp + 500 - 1
 
-            # Goto F
+            # Goto 
             if value[0] == "Goto":
                 value[0] = 10
+
+            # GotoMientras
+            if value[0] == "GotoM":
+                value[0] = 11
+
+
 
     def ExecuteCode(self):
 
@@ -571,6 +577,7 @@ class LittleDuckBaseParser(Parser):
         # print: 8
         # GotoF: 9
         # Goto: 10
+        # GotoMientras: 11
 
         i = 1
         while(i < len(self.Quads.items())+1):
@@ -618,4 +625,5 @@ class LittleDuckBaseParser(Parser):
                     i+=1
             elif value[0] == 10:
                 i = value[1]
-
+            elif value[0] == 11:
+                i = value[2]
