@@ -38,7 +38,7 @@ class LittleDuckBaseParser(Parser):
 
     memory = [None] * 1000
 
-
+    sino = []
     def DeclararVariable(self, id, valor):
         if id in self.symbolTable:
             msg = "Error: La variable ", id, " ya ha sido declarada"
@@ -130,31 +130,48 @@ class LittleDuckBaseParser(Parser):
         for quad, value in self.Quads.items():
             print(quad, value, "")
 
+    
     def FillGoToF(self):
-        self.Quads[self.pSaltos.pop()][1] = self.cont+1
+        self.Quads[self.pSaltos.pop()][2] = self.cont
+
+    def FillGoToFSino(self):
+        self.Quads[self.pSaltos.pop()][2] = self.cont+1
 
     def FillGoToFMientras(self):
-        self.Quads[self.pSaltos.pop()][1] = self.cont
+        self.Quads[self.pSaltos.pop()][2] = self.cont
 
     def FillGoTo(self):
         self.Quads[self.pSaltos.pop()][1] = self.cont
 
     def GoToF(self):
-        self.Quads[self.cont] = ['GotoF', '', None, None]
+        self.Quads[self.cont] = ['GotoF', '', self.resultado, None]
         self.pSaltos.append(self.cont)
         #print(self.Quads[self.cont])
         self.cont+=1
 
     def GoTo(self):
+        self.FillGoToFSino()
         self.Quads[self.cont] = ['Goto', '', None, None]
         self.pSaltos.append(self.cont)
         #print(self.Quads[self.cont])
         self.cont+=1
 
     def GoToMientras(self):
-        self.Quads[self.cont] = ['Goto', self.pSaltosMientras.pop()-1, None, None]
+        self.Quads[self.cont] = ['Goto', '', self.pSaltosMientras.pop()-1, None]
         #print(self.Quads[self.cont])
         self.cont+=1
+
+    def Comparacion(self, operator, l_oper, r_oper):
+        if operator == '>':
+            if l_oper > r_oper:
+                return 1
+            else:
+                return 0
+        if operator == '<':
+            if l_oper < r_oper:
+                return 1
+            else:
+                return 0
 
     # Funcion para probar que se llena la tabla de variables
     def ImprimirTabla(self):
@@ -165,6 +182,7 @@ class LittleDuckBaseParser(Parser):
 
 
     def CambiarCuadruploAMemoria(self):
+
         # Virtual addresses
         # Global memory: 100 - 199
         # Numerical consts: 200 - 299
@@ -177,6 +195,8 @@ class LittleDuckBaseParser(Parser):
         # <: 6
         # >: 7
         # print: 8
+        # GotoF: 9
+        # Goto: 10
         
 
         # Change Quadruples to memory location:
@@ -184,7 +204,6 @@ class LittleDuckBaseParser(Parser):
         cont_global = 0
         cont_const = 0
         cont_temp = 0
-        memory = [None] * 1000
         # Almacena variables globales y su localizacion en memoria
         var_loc = {}
         # Almacena variables tempoarles y su localizacion
@@ -212,7 +231,7 @@ class LittleDuckBaseParser(Parser):
                     is_const = False
 
                 if is_const:
-                    memory[cont_const + 200] = value[3]
+                    self.memory[cont_const + 200] = value[3]
                     value[3] = cont_const + 200
                     cont_const+=1
                 else:
@@ -239,7 +258,7 @@ class LittleDuckBaseParser(Parser):
                         is_const = False
 
                     if is_const:
-                        memory[cont_const + 200] = value[1]
+                        self.memory[cont_const + 200] = value[1]
                         value[1] = cont_const + 200
                         cont_const+=1
                     else:
@@ -249,6 +268,7 @@ class LittleDuckBaseParser(Parser):
                         else:
                             # Almacenamos valor en variable temporal
                             temp_var_loc[value[1]] = cont_temp + 500
+                            self.memory[temp_var_loc[value[1]]] = value[1]
                             value[1] = cont_temp + 500
                             cont_temp+=1
 
@@ -266,7 +286,7 @@ class LittleDuckBaseParser(Parser):
                     is_const = False
 
                 if is_const:
-                    memory[cont_const + 200] = value[1]
+                    self.memory[cont_const + 200] = value[1]
                     value[1] = cont_const + 200
                     cont_const+=1
                 else:
@@ -284,7 +304,7 @@ class LittleDuckBaseParser(Parser):
                     is_const = False
 
                 if is_const:
-                    memory[cont_const + 200] = value[2]
+                    self.memory[cont_const + 200] = value[2]
                     value[2] = cont_const + 200
                     cont_const+=1
                 else:
@@ -311,7 +331,7 @@ class LittleDuckBaseParser(Parser):
                     is_const = False
 
                 if is_const:
-                    memory[cont_const + 200] = value[1]
+                    self.memory[cont_const + 200] = value[1]
                     value[1] = cont_const + 200
                     cont_const+=1
                 else:
@@ -329,7 +349,7 @@ class LittleDuckBaseParser(Parser):
                     is_const = False
 
                 if is_const:
-                    memory[cont_const + 200] = value[2]
+                    self.memory[cont_const + 200] = value[2]
                     value[2] = cont_const + 200
                     cont_const+=1
                 else:
@@ -356,7 +376,7 @@ class LittleDuckBaseParser(Parser):
                     is_const = False
 
                 if is_const:
-                    memory[cont_const + 200] = value[1]
+                    self.memory[cont_const + 200] = value[1]
                     value[1] = cont_const + 200
                     cont_const+=1
                 else:
@@ -374,7 +394,7 @@ class LittleDuckBaseParser(Parser):
                     is_const = False
 
                 if is_const:
-                    memory[cont_const + 200] = value[2]
+                    self.memory[cont_const + 200] = value[2]
                     value[2] = cont_const + 200
                     cont_const+=1
                 else:
@@ -401,7 +421,7 @@ class LittleDuckBaseParser(Parser):
                     is_const = False
 
                 if is_const:
-                    memory[cont_const + 200] = value[1]
+                    self.memory[cont_const + 200] = value[1]
                     value[1] = cont_const + 200
                     cont_const+=1
                 else:
@@ -419,7 +439,7 @@ class LittleDuckBaseParser(Parser):
                     is_const = False
 
                 if is_const:
-                    memory[cont_const + 200] = value[2]
+                    self.memory[cont_const + 200] = value[2]
                     value[2] = cont_const + 200
                     cont_const+=1
                 else:
@@ -434,7 +454,7 @@ class LittleDuckBaseParser(Parser):
                 value[3] = cont_temp + 500
                 cont_temp+=1
 
-            # Mayor que
+            # Menor que
             if value[0] == '<':
                 value[0] = 6
                 
@@ -446,7 +466,7 @@ class LittleDuckBaseParser(Parser):
                     is_const = False
 
                 if is_const:
-                    memory[cont_const + 200] = value[1]
+                    self.memory[cont_const + 200] = value[1]
                     value[1] = cont_const + 200
                     cont_const+=1
                 else:
@@ -464,7 +484,7 @@ class LittleDuckBaseParser(Parser):
                     is_const = False
 
                 if is_const:
-                    memory[cont_const + 200] = value[2]
+                    self.memory[cont_const + 200] = value[2]
                     value[2] = cont_const + 200
                     cont_const+=1
                 else:
@@ -480,7 +500,7 @@ class LittleDuckBaseParser(Parser):
                 cont_temp+=1
 
 
-            # Division
+            # Mayor que
             if value[0] == '>':
                 value[0] = 7
                 
@@ -492,7 +512,7 @@ class LittleDuckBaseParser(Parser):
                     is_const = False
 
                 if is_const:
-                    memory[cont_const + 200] = value[1]
+                    self.memory[cont_const + 200] = value[1]
                     value[1] = cont_const + 200
                     cont_const+=1
                 else:
@@ -510,7 +530,7 @@ class LittleDuckBaseParser(Parser):
                     is_const = False
 
                 if is_const:
-                    memory[cont_const + 200] = value[2]
+                    self.memory[cont_const + 200] = value[2]
                     value[2] = cont_const + 200
                     cont_const+=1
                 else:
@@ -524,3 +544,78 @@ class LittleDuckBaseParser(Parser):
                 temp_var_loc[value[3]] = cont_temp + 500
                 value[3] = cont_temp + 500
                 cont_temp+=1
+
+            # Goto F
+            if value[0] == "GotoF":
+                value[0] = 9
+                #temp_var_loc[value[1]] = cont_temp + 500
+                value[1] = cont_temp + 500 - 1
+
+            # Goto F
+            if value[0] == "Goto":
+                value[0] = 10
+
+    def ExecuteCode(self):
+
+        # Virtual addresses
+        # Global memory: 100 - 199
+        # Numerical consts: 200 - 299
+        # Temp memory: 500 - 599
+        # =: 1
+        # +: 2
+        # -: 3
+        # *: 4
+        # /: 5
+        # <: 6
+        # >: 7
+        # print: 8
+        # GotoF: 9
+        # Goto: 10
+
+        i = 1
+        while(i < len(self.Quads.items())+1):
+            value = self.Quads[i]
+            if value[0] == 1:
+                self.memory[value[1]] = self.memory[value[3]]
+                i+=1
+            elif value[0] == 2:
+                resultado = self.memory[value[1]] + self.memory[value[2]]
+                self.memory[value[3]] = resultado
+                i+=1
+                #print(self.memory[value[3]])
+            elif value[0] == 3:
+                resultado = self.memory[value[1]] - self.memory[value[2]]
+                self.memory[value[3]] = resultado
+                i+=1
+                #print(self.memory[value[3]])
+            elif value[0] == 4:
+                resultado = self.memory[value[1]] * self.memory[value[2]]
+                self.memory[value[3]] = resultado
+                i+=1
+                #print(self.memory[value[3]])
+            elif value[0] == 5:
+                resultado = self.memory[value[1]] / self.memory[value[2]]
+                self.memory[value[3]] = resultado
+                i+=1
+                #print(self.memory[value[3]])
+            elif value[0] == 6:
+                resultado = self.Comparacion('<', self.memory[value[1]], self.memory[value[2]])
+                self.memory[value[3]] = resultado
+                i+=1
+                #print(self.memory[value[3]])
+            elif value[0] == 7:
+                resultado = self.Comparacion('>', self.memory[value[1]], self.memory[value[2]])
+                self.memory[value[3]] = resultado
+                i+=1
+                #print(self.memory[value[3]])
+            elif value[0] == 8:
+                print(self.memory[value[1]])
+                i+=1
+            elif value[0] == 9:
+                if self.memory[value[1]] == 0:
+                    i = value[2]
+                else:
+                    i+=1
+            elif value[0] == 10:
+                i = value[1]
+

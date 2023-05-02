@@ -4,7 +4,7 @@ grammar LittleDuck;
 options {superClass = LittleDuckBaseParser; }
 
 // Definicion de gramatica
-prog: PROG ID PUNTOCOMA comprobarvars cuerpo {$parser.CambiarCuadruploAMemoria()} {$parser.ImprimirCuadruplos()}; // Agregue codigo al final de esta regla para hacer pruebas
+prog: PROG ID PUNTOCOMA comprobarvars cuerpo {$parser.ImprimirCuadruplos()} {$parser.CambiarCuadruploAMemoria()} {$parser.ImprimirCuadruplos()} {$parser.ExecuteCode()}; // Agregue codigo al final de esta regla para hacer pruebas
 comprobarvars
             :
             vars
@@ -52,14 +52,15 @@ estatuto
 
 asigna: ID {$parser.ids.append($ID.text)} ASIGNA expresion {$parser.AsignarValor($ID.text, $parser.resultado)} {$parser.CuadruploAsignarValor($ID.text, $parser.operands.pop())} PUNTOCOMA;
 
-condicion: SI  INICIOPARENTESIS expresion FINPARENTESIS {$parser.operands.clear()} {$parser.resultado = 0} {$parser.ids.clear()} {$parser.currentExpresionLength = 0} {$parser.GoToF()} cuerpo {$parser.FillGoToF()} sino PUNTOCOMA;
+condicion: SI  INICIOPARENTESIS expresion FINPARENTESIS {$parser.GoToF()} {$parser.operands.clear()} {$parser.resultado = 0} {$parser.ids.clear()} {$parser.currentExpresionLength = 0} cuerpo sino  PUNTOCOMA;
 sino
     :
-    {$parser.GoTo()}
     SINO
+    {$parser.GoTo()}
     cuerpo
     {$parser.FillGoTo()}
-    | /* epsilon */
+    | 
+    /* epsilon */ {$parser.FillGoToF()}
     ;
 
 ciclo: MIENTRAS INICIOPARENTESIS expresion FINPARENTESIS {$parser.operands.clear()} {$parser.resultado = 0} {$parser.ids.clear()} {$parser.currentExpresionLength = 0} {$parser.pSaltosMientras.append($parser.cont)} {$parser.GoToF()} cuerpo {$parser.GoToMientras()} PUNTOCOMA {$parser.FillGoToFMientras()} {$parser.operands.clear()} {$parser.resultado = 0} {$parser.ids.clear()} {$parser.currentExpresionLength = 0} {$parser.pSaltosMientras.append($parser.cont)};
