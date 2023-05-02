@@ -4,7 +4,7 @@ grammar LittleDuck;
 options {superClass = LittleDuckBaseParser; }
 
 // Definicion de gramatica
-prog: PROG ID PUNTOCOMA comprobarvars cuerpo {$parser.ImprimirCuadruplos()} {$parser.CambiarCuadruploAMemoria()} {$parser.ImprimirCuadruplos()} {$parser.ExecuteCode()}; // Agregue codigo al final de esta regla para hacer pruebas
+prog: PROG ID PUNTOCOMA comprobarvars cuerpo {$parser.CambiarCuadruploAMemoria()} {$parser.ExecuteCode()}; // Agregue codigo al final de esta regla para hacer pruebas
 comprobarvars
             :
             vars

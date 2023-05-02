@@ -620,10 +620,24 @@ class LittleDuckBaseParser(Parser):
                 i+=1
             elif value[0] == 9:
                 if self.memory[value[1]] == 0:
-                    i = value[2]
+                    if (value[2] > len(self.Quads.items())):
+                        break
+                    else:
+                        i = value[2]
                 else:
                     i+=1
+
             elif value[0] == 10:
-                i = value[1]
+                
+                if (value[1] > len(self.Quads.items())):
+                    break
+                else:
+                    i = value[1]
+                    
             elif value[0] == 11:
-                i = value[2]
+                if (value[2] > len(self.Quads.items())):
+                    break
+                else:
+                    i = value[2]
+
+
