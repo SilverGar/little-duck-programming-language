@@ -1,0 +1,13 @@
+prog test;
+var
+	int: a,b;
+[
+
+	b = 5;
+	a = 5;
+	mientras(a>1)[
+		b = b *(a-1);
+		a = a-1;
+	];
+	print("El facotrial de 5 es: ", b);
+]
